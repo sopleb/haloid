@@ -94,9 +94,9 @@ async fn administrators_see_the_release_on_offer_and_nobody_else_does() {
     };
     let name = format!("haloid-server-community-{TARGET}.manifest");
     Mock::given(method("GET"))
-        .and(path("/releases/permalink/latest"))
+        .and(path("/releases/latest"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "assets": {"links": [{"name": name, "direct_asset_url": format!("{}/m", host.uri())}]}
+            "assets": [{"name": name, "browser_download_url": format!("{}/m", host.uri())}]
         })))
         .mount(&host)
         .await;
@@ -116,7 +116,7 @@ async fn administrators_see_the_release_on_offer_and_nobody_else_does() {
             current: "0.1.0".into(),
             // Not installable: the page offers the notice only.
             installer: Installer::Binary { exe: None },
-            source: Source::Gitlab { api: host.uri() },
+            source: Source::Github { api: host.uri() },
             trusted: vec![haloid_release::public_key(&SIGNER)],
             disabled: None,
         }),

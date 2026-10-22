@@ -37,18 +37,19 @@ pub const TICK: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 /// Where releases are announced.
 #[derive(Debug, Clone)]
 pub enum Source {
-    /// A GitLab project's releases API, e.g.
-    /// `https://git.plb.so/api/v4/projects/sopleb%2Fhaloid`. The latest
-    /// release carries a manifest per edition and target as a link named
-    /// `haloid-server-<edition>-<target>.manifest`.
-    Gitlab { api: String },
+    /// A GitHub repository's releases API, e.g.
+    /// `https://api.github.com/repos/sopleb/haloid`. The latest release
+    /// carries a manifest per edition and target as an asset named
+    /// `haloid-server-<edition>-<target>.manifest`, and one for the image,
+    /// `haloid-image-<edition>.manifest`.
+    Github { api: String },
     /// The licence service, which answers only for an active key. `None`
     /// when this instance is not pointed at one.
     LicenceService { server: Option<String> },
 }
 
-/// The Community build's release host.
-pub const GITLAB_API: &str = "https://git.plb.so/api/v4/projects/sopleb%2Fhaloid";
+/// The Community build's release host: the public snapshot on GitHub.
+pub const GITHUB_API: &str = "https://api.github.com/repos/sopleb/haloid";
 
 pub struct UpdatesConfig {
     pub edition: Edition,
@@ -92,8 +93,8 @@ impl UpdatesConfig {
             target: haloid_release::BUILD_TARGET.into(),
             current: env!("CARGO_PKG_VERSION").into(),
             installer: Installer::Binary { exe: None },
-            source: Source::Gitlab {
-                api: GITLAB_API.into(),
+            source: Source::Github {
+                api: GITHUB_API.into(),
             },
             trusted: haloid_release::RELEASE_KEYS.to_vec(),
             disabled: Some("this build has no updater".into()),
@@ -346,7 +347,7 @@ impl Updates {
     /// in a container an image.
     async fn latest(&self) -> Result<Option<Offer>, String> {
         let (text, registry_auth) = match &self.config.source {
-            Source::Gitlab { api } => (self.ask_gitlab(api).await?, None),
+            Source::Github { api } => (self.ask_github(api).await?, None),
             Source::LicenceService { server } => {
                 match self.ask_licence_service(server.as_deref()).await? {
                     Some((text, auth)) => (Some(text), auth),
@@ -402,26 +403,21 @@ impl Updates {
         })
     }
 
-    async fn ask_gitlab(&self, api: &str) -> Result<Option<String>, String> {
+    async fn ask_github(&self, api: &str) -> Result<Option<String>, String> {
         #[derive(serde::Deserialize)]
         struct Release {
-            assets: Assets,
+            assets: Vec<Asset>,
         }
         #[derive(serde::Deserialize)]
-        struct Assets {
-            links: Vec<Link>,
-        }
-        #[derive(serde::Deserialize)]
-        struct Link {
+        struct Asset {
             name: String,
-            direct_asset_url: String,
+            browser_download_url: String,
         }
+        // The latest full release: drafts and pre-releases are not offered.
         let response = self
             .http
-            .get(format!(
-                "{}/releases/permalink/latest",
-                api.trim_end_matches('/')
-            ))
+            .get(format!("{}/releases/latest", api.trim_end_matches('/')))
+            .header(reqwest::header::ACCEPT, "application/vnd.github+json")
             .send()
             .await
             .map_err(|e| e.to_string())?;
@@ -444,11 +440,11 @@ impl Updates {
                 self.config.target
             )
         };
-        let Some(link) = release.assets.links.into_iter().find(|l| l.name == name) else {
+        let Some(asset) = release.assets.into_iter().find(|a| a.name == name) else {
             return Ok(None);
         };
         self.http
-            .get(link.direct_asset_url)
+            .get(asset.browser_download_url)
             .send()
             .await
             .and_then(reqwest::Response::error_for_status)

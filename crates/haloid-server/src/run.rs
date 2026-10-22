@@ -299,7 +299,7 @@ fn updates_config(
     edition: Edition,
     exe: Option<std::path::PathBuf>,
 ) -> haloid_service::updates::UpdatesConfig {
-    use haloid_service::updates::{GITLAB_API, Installer, Source, UpdatesConfig};
+    use haloid_service::updates::{GITHUB_API, Installer, Source, UpdatesConfig};
     let var = |name: &str| std::env::var(name).ok().filter(|v| !v.trim().is_empty());
     // HALOID_IN_CONTAINER says so either way (`0` for a binary that runs in
     // a container but owns its own file); otherwise Docker's marker file.
@@ -318,8 +318,8 @@ fn updates_config(
         (true, _, _) => Installer::Container,
     };
     let source = match edition {
-        Edition::Community => Source::Gitlab {
-            api: var("HALOID_RELEASES_URL").unwrap_or_else(|| GITLAB_API.into()),
+        Edition::Community => Source::Github {
+            api: var("HALOID_RELEASES_URL").unwrap_or_else(|| GITHUB_API.into()),
         },
         Edition::Pro => Source::LicenceService {
             server: var("HALOID_LICENCE_SERVER"),

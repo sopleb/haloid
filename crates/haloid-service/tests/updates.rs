@@ -85,14 +85,14 @@ async fn host(version: &str, binary: &[u8], advertised: &[u8], signer: [u8; 32])
     };
     let name = format!("haloid-server-community-{TARGET}.manifest");
     Mock::given(method("GET"))
-        .and(path("/api/releases/permalink/latest"))
+        .and(path("/api/releases/latest"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "tag_name": format!("v{version}"),
-            "assets": {"links": [
+            "assets": [
                 {"name": "haloid-server-community-aarch64-unknown-linux-musl.manifest",
-                 "direct_asset_url": format!("{}/downloads/other.manifest", server.uri())},
-                {"name": name, "direct_asset_url": format!("{}/downloads/{name}", server.uri())},
-            ]}
+                 "browser_download_url": format!("{}/downloads/other.manifest", server.uri())},
+                {"name": name, "browser_download_url": format!("{}/downloads/{name}", server.uri())},
+            ]
         })))
         .mount(&server)
         .await;
@@ -124,7 +124,7 @@ async fn updates(db: &haloid_db::Db, server: &MockServer, exe: Option<&Path>) ->
             installer: Installer::Binary {
                 exe: exe.map(Path::to_path_buf),
             },
-            source: Source::Gitlab {
+            source: Source::Github {
                 api: format!("{}/api", server.uri()),
             },
             trusted: vec![public_key(&SIGNER)],
@@ -305,7 +305,7 @@ async fn in_a_container_there_is_no_updater() {
             target: TARGET.into(),
             current: "0.1.0".into(),
             installer: Installer::Binary { exe: Some(exe) },
-            source: Source::Gitlab {
+            source: Source::Github {
                 api: format!("{}/api", server.uri()),
             },
             trusted: vec![public_key(&SIGNER)],
@@ -380,14 +380,14 @@ async fn image_host(version: &str, sidecar_status: u16) -> (MockServer, String) 
     };
     let text = haloid_release::sign_image(&release, &SIGNER);
     Mock::given(method("GET"))
-        .and(path("/api/releases/permalink/latest"))
+        .and(path("/api/releases/latest"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "assets": {"links": [
+            "assets": [
                 {"name": format!("haloid-server-community-{TARGET}.manifest"),
-                 "direct_asset_url": format!("{}/downloads/binary.manifest", server.uri())},
+                 "browser_download_url": format!("{}/downloads/binary.manifest", server.uri())},
                 {"name": "haloid-image-community.manifest",
-                 "direct_asset_url": format!("{}/downloads/image.manifest", server.uri())},
-            ]}
+                 "browser_download_url": format!("{}/downloads/image.manifest", server.uri())},
+            ]
         })))
         .mount(&server)
         .await;
@@ -435,7 +435,7 @@ async fn in_a_container(
             target: TARGET.into(),
             current: "0.1.0".into(),
             installer,
-            source: Source::Gitlab {
+            source: Source::Github {
                 api: format!("{}/api", server.uri()),
             },
             trusted: vec![public_key(&SIGNER)],
