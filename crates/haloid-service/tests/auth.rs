@@ -364,7 +364,10 @@ async fn api_keys_authenticate_and_say_precisely_why_not() {
         Actor::Guest
     );
 
-    let tampered = format!("{}x", &secret[..secret.len() - 1]);
+    // Change the last character to one it is not: a fixed replacement
+    // matches the real one once in 62 keys.
+    let last = if secret.ends_with('x') { 'y' } else { 'x' };
+    let tampered = format!("{}{last}", &secret[..secret.len() - 1]);
     for (presented, expected) in [
         ("", "missing"),
         ("   ", "missing"),

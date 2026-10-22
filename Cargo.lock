@@ -897,7 +897,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-api-legacy"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "axum",
  "chrono",
@@ -914,7 +914,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-api-v2"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "axum",
  "chrono",
@@ -932,7 +932,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-core"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -943,7 +943,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-db"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "async-trait",
  "chrono",
@@ -961,7 +961,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-id"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "rand 0.9.5",
  "thiserror",
@@ -969,7 +969,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-import"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "chrono",
  "haloid-core",
@@ -987,7 +987,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-jobs"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "chrono",
  "haloid-core",
@@ -1003,7 +1003,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-licence"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -1017,7 +1017,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-media"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "async-trait",
  "haloid-core",
@@ -1034,7 +1034,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-release"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -1050,7 +1050,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-server"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "altcha",
  "anyhow",
@@ -1088,7 +1088,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-service"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "altcha",
  "arc-swap",
@@ -1126,7 +1126,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-storage"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -1141,7 +1141,7 @@ dependencies = [
 
 [[package]]
 name = "haloid-updater"
-version = "0.1.0"
+version = "0.1.0-rc.1"
 dependencies = [
  "axum",
  "bollard",
