@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+#
+# The updater sidecar for Docker installs: replaces the Haloid container
+# with a newer signed release when Haloid asks. It needs the Docker socket
+# and nothing else. See docs/deploy.md, Updates.
+
+FROM rust:1-trixie AS build
+WORKDIR /src
+COPY . .
+RUN cargo build --release --locked -p haloid-updater \
+    && strip target/release/haloid-updater
+
+FROM debian:trixie-slim
+COPY --from=build /src/target/release/haloid-updater /usr/local/bin/haloid-updater
+ENV HALOID_UPDATER_BIND=0.0.0.0:8090
+EXPOSE 8090
+CMD ["haloid-updater"]

@@ -1,0 +1,51 @@
+[package]
+name = "haloid-service"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+haloid-core = { workspace = true }
+haloid-id = { workspace = true }
+haloid-db = { workspace = true }
+haloid-storage = { workspace = true }
+haloid-media = { workspace = true }
+haloid-licence = { workspace = true }
+haloid-release = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+arc-swap = { workspace = true }
+argon2 = { workspace = true }
+bcrypt = { workspace = true }
+hmac = { workspace = true }
+sha2 = { workspace = true }
+rand = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+subtle = { workspace = true }
+altcha = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+md-5 = { workspace = true }
+reqwest = { workspace = true }
+tokio-util = { workspace = true }
+futures = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+# The shared integration-test harness lives in haloid-db/tests/common and is
+# included by path; these are what it needs.
+sqlx = { workspace = true }
+uuid = { workspace = true }
+tempfile = { workspace = true }
+wiremock = { workspace = true }
+haloid-licence = { workspace = true, features = ["sign"] }
+haloid-release = { workspace = true, features = ["sign"] }

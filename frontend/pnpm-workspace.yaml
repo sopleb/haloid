@@ -1,0 +1,7 @@
+# openapi-typescript 7 declares a TypeScript 5 peer but only uses the
+# compiler's printer API, which TypeScript 6 keeps. Its output is
+# type-checked by `pnpm check` on every run, so a real incompatibility
+# would fail the build rather than slip through.
+peerDependencyRules:
+  allowedVersions:
+    openapi-typescript>typescript: "6"

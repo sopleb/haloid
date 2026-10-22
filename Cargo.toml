@@ -1,0 +1,123 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+license = "PolyForm-Noncommercial-1.0.0"
+authors = ["sopleb <sopleb@pm.me>"]
+repository = "https://git.plb.so/sopleb/haloid"
+
+[workspace.dependencies]
+# internal
+haloid-core = { path = "crates/haloid-core" }
+haloid-id = { path = "crates/haloid-id" }
+haloid-db = { path = "crates/haloid-db" }
+haloid-storage = { path = "crates/haloid-storage" }
+haloid-media = { path = "crates/haloid-media" }
+haloid-service = { path = "crates/haloid-service" }
+haloid-api-legacy = { path = "crates/haloid-api-legacy" }
+haloid-api-v2 = { path = "crates/haloid-api-v2" }
+haloid-jobs = { path = "crates/haloid-jobs" }
+haloid-licence = { path = "crates/haloid-licence" }
+haloid-server = { path = "crates/haloid-server" }
+haloid-import = { path = "crates/haloid-import" }
+haloid-release = { path = "crates/haloid-release" }
+
+# http
+axum = { version = "0.8", features = ["multipart", "macros"] }
+axum-extra = { version = "0.10", features = ["cookie-private", "typed-header"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "request-id", "cors", "fs", "limit", "set-header"] }
+
+# async
+tokio = { version = "1.47", features = ["full"] }
+tokio-util = { version = "0.7", features = ["io"] }
+futures = "0.3"
+async-trait = "0.1"
+
+# data
+sqlx = { version = "0.8", default-features = false, features = [
+  "runtime-tokio", "tls-rustls", "mysql", "macros", "migrate", "chrono", "json", "uuid",
+] }
+serde = { version = "1", features = ["derive"] }
+# preserve_order is load-bearing: the legacy API's field order is part of its contract.
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_with = "3"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
+arc-swap = "1"
+
+# errors + logging
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+log = "0.4"            # sqlx's ConnectOptions::log_slow_statements speaks log levels
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# crypto / encoding
+argon2 = "0.5"
+# Read-only: verifying bcrypt hashes brought over by the importer, which
+# are replaced with argon2id at the user's next login.
+bcrypt = "0.17"
+password-hash = "0.5"
+hmac = "0.12"
+sha2 = "0.10"
+semver = "1"
+md-5 = "0.10"          # The legacy API's `checksum` field is MD5. Compatibility, not a choice.
+base64 = "0.22"
+hex = "0.4"
+rand = "0.9"
+subtle = "2"
+# Licence keys: Ed25519 signatures, checked offline against a public key
+# compiled in. Only the keygen ever holds the signing half.
+ed25519-dalek = "2"
+# ALTCHA proof-of-work, protocol v2: the official crate, never hand-rolled.
+# See CLAUDE.md — v2 verification includes a keyPrefix check that is
+# load-bearing.
+altcha = "1"
+
+# media + storage
+kamadak-exif = "0.6"
+infer = "0.19"
+# Header-only dimensions: the probe never decodes pixels, which is what makes
+# its decompression-bomb guard sound.
+imagesize = "0.13"
+mime = "0.3"
+
+# The built frontend compiled into the server binary, behind a feature.
+rust-embed = { version = "8", features = ["mime-guess"] }
+
+# Resource limits on the media tools' child processes (setrlimit).
+libc = "0.2"
+
+# net
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+hickory-resolver = "0.25"
+ipnet = "2"
+url = "2"
+
+# api documentation: OpenAPI 3.1 for /api/v2, from which the frontend's types
+# are generated.
+utoipa = { version = "6", features = ["chrono"] }
+
+# misc
+slug = "0.1"
+humansize = "2"
+unicode-normalization = "0.1"
+
+# dev
+insta = "1"
+rstest = "0.24"
+pretty_assertions = "1"
+tempfile = "3"
+wiremock = "0.6"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+
+[workspace.lints.clippy]
+todo = "warn"
+dbg_macro = "warn"

@@ -1,0 +1,27 @@
+[package]
+name = "haloid-import"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Importing a Chevereto v4 database into Haloid"
+
+[lints]
+workspace = true
+
+[dependencies]
+haloid-core = { workspace = true }
+haloid-db = { workspace = true }
+haloid-id = { workspace = true }
+haloid-service = { workspace = true }
+chrono = { workspace = true }
+hex = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sqlx = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+uuid = { workspace = true }

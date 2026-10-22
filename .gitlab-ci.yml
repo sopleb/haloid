@@ -1,0 +1,266 @@
+# Haloid CI.
+#
+# Three things gate a merge: the crate boundary rule, lint and format, and the
+# tests — including the integration tests, which run against a real MariaDB
+# service rather than skipping. A skipped integration suite is worse than a
+# failing one, because it looks green.
+
+stages:
+  - check
+  - test
+  - image
+
+variables:
+  CARGO_HOME: $CI_PROJECT_DIR/.cargo
+  CARGO_TERM_COLOR: always
+  # No query macros yet, so nothing needs a prepared .sqlx directory. Once
+  # they arrive, `cargo sqlx prepare` output is committed and this keeps CI
+  # from needing a database just to compile.
+  SQLX_OFFLINE: "true"
+  # Nothing in the build reads history.
+  GIT_DEPTH: "20"
+
+# The official rust image ships a minimal profile: rustfmt and clippy are not
+# included and have to be added per job.
+.rust:
+  image: rust:1-trixie
+  interruptible: true
+  before_script:
+    - rustc --version && cargo --version
+  cache:
+    key: "cargo-$CI_COMMIT_REF_SLUG"
+    fallback_keys:
+      - "cargo-$CI_DEFAULT_BRANCH"
+    paths:
+      - .cargo/registry/index
+      - .cargo/registry/cache
+      - .cargo/git/db
+      - target/
+
+# The SvelteKit app: types, lint (including the rule that it never calls
+# the legacy API), unit tests and a production build. Playwright runs
+# against the real backend via scripts/e2e-server.sh, in the e2e job.
+frontend:
+  stage: check
+  image: node:24-trixie
+  interruptible: true
+  cache:
+    key: "pnpm-$CI_COMMIT_REF_SLUG"
+    fallback_keys:
+      - "pnpm-$CI_DEFAULT_BRANCH"
+    paths:
+      - .pnpm-store
+      - .corepack
+  variables:
+    # Kept in the cache, so the pnpm binary is downloaded once, not per job.
+    COREPACK_HOME: "$CI_PROJECT_DIR/.corepack"
+  before_script:
+    - corepack enable
+    - cd frontend
+    # Corepack fetches pnpm itself with a 30-second timeout and no retry,
+    # which a slow registry has failed twice running. Try it three times,
+    # then fall back to npm, which retries with longer timeouts.
+    - |
+      for i in 1 2 3; do pnpm --version && break; echo "corepack could not fetch pnpm, retrying"; sleep 10; done
+      if ! pnpm --version >/dev/null 2>&1; then
+        corepack disable
+        npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]")" --fetch-timeout=120000 --fetch-retries=5
+      fi
+    - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
+    - pnpm install --frozen-lockfile
+  script:
+    # The types are generated from the backend's OpenAPI document (which a
+    # Rust test keeps current); a stale copy means a backend change the
+    # frontend has not caught up with.
+    - pnpm run api:types
+    - git diff --exit-code -- src/lib/api/schema.d.ts
+    - pnpm run check
+    - pnpm run lint
+    - pnpm run test
+    - pnpm run build
+
+# Cheap and toolchain-independent, so it runs on its own tiny image.
+boundaries:
+  stage: check
+  image: alpine:3
+  before_script:
+    - apk add --no-cache bash
+  script:
+    - ./scripts/check-crate-boundaries.sh
+
+# Native tools for the jobs that compile and test. Formatting needs none of
+# this, and installing libvips for it cost ~50s a run. The libheif decoder
+# plugins are only Recommends of libvips, so --no-install-recommends would
+# leave HEIC and AVIF undecodable without naming them.
+.native:
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq --no-install-recommends libvips-dev libvips-tools ffmpeg pkg-config libheif-plugin-libde265 libheif-plugin-dav1d libheif-plugin-x265 libheif-plugin-aomenc
+    - rustc --version && cargo --version
+
+format:
+  extends: .rust
+  stage: check
+  before_script:
+    - rustup component add rustfmt
+  script:
+    - cargo fmt --all --check
+
+clippy:
+  extends:
+    - .rust
+    - .native
+  stage: check
+  script:
+    - rustup component add clippy
+    # --all-features includes embed-frontend, which compiles frontend/build in.
+    - ./scripts/stub-frontend.sh
+    - cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+test:
+  extends:
+    - .rust
+    - .native
+  stage: test
+  services:
+    - name: mariadb:12
+      alias: mariadb
+  variables:
+    MARIADB_ROOT_PASSWORD: haloid-ci
+    MARIADB_DATABASE: haloid_ci
+    # No database component: the harness creates and drops one per test.
+    TEST_DATABASE_URL: "mysql://root:haloid-ci@mariadb:3306"
+  script:
+    # Prebuilt binary; building nextest from source would dominate the job.
+    # Retried with short timeouts: a stalled download once burned the job's
+    # whole five minutes before failing.
+    - curl -LsSf --connect-timeout 20 --max-time 120 --retry 5 --retry-all-errors https://get.nexte.st/latest/linux | tar zxf - -C /usr/local/bin
+    - apt-get install -y -qq --no-install-recommends mariadb-client
+    - |
+      echo "waiting for mariadb"
+      for i in $(seq 1 60); do
+        if mariadb-admin --protocol=tcp -h mariadb -u root -phaloid-ci ping >/dev/null 2>&1; then
+          echo "mariadb is up"; break
+        fi
+        if [ "$i" = 60 ]; then echo "mariadb never came up"; exit 1; fi
+        sleep 2
+      done
+    - ./scripts/stub-frontend.sh
+    - cargo nextest run --workspace --all-features
+  artifacts:
+    when: always
+    reports:
+      junit: target/nextest/default/junit.xml
+    expire_in: 1 week
+
+# The Playwright suite, against the real server and a real MariaDB, with the
+# axe accessibility sweep. Node's image, with Rust added: the browser tooling
+# wants a current Node more than the server build wants the rust image.
+e2e:
+  stage: test
+  image: node:24-trixie
+  interruptible: true
+  services:
+    - name: mariadb:12
+      alias: mariadb
+  variables:
+    MARIADB_ROOT_PASSWORD: haloid-ci
+    MARIADB_DATABASE: haloid_ci
+    TEST_DATABASE_URL: "mysql://root:haloid-ci@mariadb:3306"
+    COREPACK_HOME: "$CI_PROJECT_DIR/.corepack"
+    RUSTUP_HOME: "$CI_PROJECT_DIR/.rustup"
+  cache:
+    key: "e2e-$CI_COMMIT_REF_SLUG"
+    fallback_keys:
+      - "e2e-$CI_DEFAULT_BRANCH"
+    paths:
+      - .cargo/registry/index
+      - .cargo/registry/cache
+      - .rustup
+      - target/
+      - .pnpm-store
+      - .corepack
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq --no-install-recommends libvips-tools ffmpeg libheif-plugin-libde265 libheif-plugin-dav1d libheif-plugin-x265 libheif-plugin-aomenc mariadb-client
+    - curl -sSf --retry 5 https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --no-modify-path
+    - export PATH="$CARGO_HOME/bin:$PATH"
+    - corepack enable
+    - cd frontend
+    - |
+      for i in 1 2 3; do pnpm --version && break; echo "corepack could not fetch pnpm, retrying"; sleep 10; done
+      if ! pnpm --version >/dev/null 2>&1; then
+        corepack disable
+        npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]")" --fetch-timeout=120000 --fetch-retries=5
+      fi
+    - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
+    - pnpm install --frozen-lockfile
+    - pnpm exec playwright install --with-deps chromium
+    - |
+      for i in $(seq 1 60); do
+        if mariadb-admin --protocol=tcp -h mariadb -u root -phaloid-ci ping >/dev/null 2>&1; then break; fi
+        if [ "$i" = 60 ]; then echo "mariadb never came up"; exit 1; fi
+        sleep 2
+      done
+  script:
+    # Built before Playwright starts it, so its web-server timeout is spent
+    # starting the server, not compiling it.
+    - (cd .. && cargo build -q -p haloid-server)
+    - pnpm build
+    - pnpm exec playwright test
+  artifacts:
+    when: on_failure
+    paths:
+      - frontend/playwright-report
+      - frontend/test-results
+    expire_in: 1 week
+
+# The Docker image, on main once everything above has passed: built with
+# kaniko, which needs no privileged runner, and pushed to this project's
+# registry as :<short sha> and :main. Layers are cached in the registry.
+docker-image:
+  stage: image
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  # The release build of the server dominates; give it room.
+  timeout: 90m
+  script:
+    - mkdir -p /kaniko/.docker
+    - >-
+      echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')\"}}}"
+      > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "$CI_PROJECT_DIR"
+      --dockerfile "$CI_PROJECT_DIR/Dockerfile"
+      --destination "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+      --destination "$CI_REGISTRY_IMAGE:main"
+      --cache=true
+      --cache-repo "$CI_REGISTRY_IMAGE/cache"
+      --snapshot-mode=redo
+
+updater-image:
+  stage: image
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  timeout: 30m
+  script:
+    - mkdir -p /kaniko/.docker
+    - >-
+      echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')\"}}}"
+      > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "$CI_PROJECT_DIR"
+      --dockerfile "$CI_PROJECT_DIR/Dockerfile.updater"
+      --destination "$CI_REGISTRY_IMAGE/updater:$CI_COMMIT_SHORT_SHA"
+      --destination "$CI_REGISTRY_IMAGE/updater:main"
+      --cache=true
+      --cache-repo "$CI_REGISTRY_IMAGE/updater/cache"
+      --snapshot-mode=redo

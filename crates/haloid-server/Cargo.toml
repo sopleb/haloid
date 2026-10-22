@@ -1,0 +1,56 @@
+[package]
+name = "haloid-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+haloid-core = { workspace = true }
+haloid-db = { workspace = true }
+haloid-storage = { workspace = true }
+haloid-media = { workspace = true }
+haloid-service = { workspace = true }
+haloid-api-legacy = { workspace = true }
+haloid-api-v2 = { workspace = true }
+haloid-jobs = { workspace = true }
+haloid-import = { workspace = true }
+haloid-release = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tower-http = { workspace = true }
+tower = { workspace = true, features = ["util"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true }
+hex = { workspace = true }
+chrono = { workspace = true }
+ipnet = { workspace = true }
+rpassword = "7"
+rust-embed = { workspace = true, optional = true }
+
+[features]
+# Compile frontend/build into the binary, for a single-file deploy. Build
+# the frontend first (`pnpm build` in frontend/); the Dockerfile does.
+embed-frontend = ["dep:rust-embed"]
+
+[dev-dependencies]
+# The shared integration-test harness lives in haloid-db/tests/common and is
+# included by path; these are what it needs.
+sqlx = { workspace = true }
+uuid = { workspace = true }
+tempfile = { workspace = true }
+tower = { workspace = true, features = ["util"] }
+insta = { workspace = true }
+base64 = { workspace = true }
+altcha = { workspace = true }
+haloid-licence = { workspace = true, features = ["sign"] }
+haloid-release = { workspace = true, features = ["sign"] }
+wiremock = { workspace = true }

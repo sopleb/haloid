@@ -1,0 +1,29 @@
+[package]
+name = "haloid-updater"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "The updater sidecar: replaces a Docker install's Haloid container with a newer signed release"
+
+[lints]
+workspace = true
+
+[dependencies]
+haloid-release = { workspace = true }
+axum = { workspace = true }
+bollard = "0.21"
+chrono = { workspace = true }
+futures = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+subtle = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+haloid-release = { workspace = true, features = ["sign"] }
+tower = { workspace = true }

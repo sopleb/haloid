@@ -1,0 +1,33 @@
+[package]
+name = "haloid-release"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Haloid release manifests: the signed description of a build, and checking one"
+
+[lints]
+workspace = true
+
+[features]
+# Signing, for the release pipeline and for tests. The server never needs it.
+sign = ["dep:sha2", "dep:hex"]
+
+[[bin]]
+name = "haloid-release-sign"
+required-features = ["sign"]
+
+[dependencies]
+base64 = { workspace = true }
+chrono = { workspace = true }
+ed25519-dalek = { workspace = true }
+semver = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+
+[dev-dependencies]
+haloid-release = { path = ".", features = ["sign"] }

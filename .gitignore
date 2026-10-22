@@ -1,0 +1,16 @@
+/target
+/frontend/node_modules
+/frontend/.svelte-kit
+/frontend/build
+/frontend/test-results
+/frontend/playwright-report
+/.pnpm-store
+/.taste-skill
+/data
+.env
+.direnv
+result
+*.log
+/.codegraph
+/.agents
+/.claude

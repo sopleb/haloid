@@ -1,0 +1,294 @@
+{
+ "Id": "19832ea5a527e1f4b5317d8662acc361a4f0e6203f4bbae3b7337dcaf549dc27",
+ "Created": "2026-10-22T18:22:24.323388457Z",
+ "Path": "docker-entrypoint.sh",
+ "Args": [
+  "redis-server"
+ ],
+ "State": {
+  "Status": "running",
+  "Running": true,
+  "Paused": false,
+  "Restarting": false,
+  "OOMKilled": false,
+  "Dead": false,
+  "Pid": 784126,
+  "ExitCode": 0,
+  "Error": "",
+  "StartedAt": "2026-10-22T18:22:24.356891871Z",
+  "FinishedAt": "0001-01-01T00:00:00Z"
+ },
+ "Image": "sha256:44960b3100c48159a66d28c18b0588c193492e25f7551d60e51dd464fc3eca5b",
+ "ResolvConfPath": "/var/lib/docker/containers/19832ea5a527e1f4b5317d8662acc361a4f0e6203f4bbae3b7337dcaf549dc27/resolv.conf",
+ "HostnamePath": "/var/lib/docker/containers/19832ea5a527e1f4b5317d8662acc361a4f0e6203f4bbae3b7337dcaf549dc27/hostname",
+ "HostsPath": "/var/lib/docker/containers/19832ea5a527e1f4b5317d8662acc361a4f0e6203f4bbae3b7337dcaf549dc27/hosts",
+ "LogPath": "/var/lib/docker/containers/19832ea5a527e1f4b5317d8662acc361a4f0e6203f4bbae3b7337dcaf549dc27/19832ea5a527e1f4b5317d8662acc361a4f0e6203f4bbae3b7337dcaf549dc27-json.log",
+ "Name": "/upd-fixture",
+ "RestartCount": 0,
+ "Driver": "overlayfs",
+ "Platform": "linux",
+ "MountLabel": "",
+ "ProcessLabel": "",
+ "AppArmorProfile": "",
+ "ExecIDs": null,
+ "HostConfig": {
+  "Binds": [
+   "upd-fixture-data:/data"
+  ],
+  "ContainerIDFile": "",
+  "LogConfig": {
+   "Type": "json-file",
+   "Config": {}
+  },
+  "NetworkMode": "upd-fixture-net",
+  "PortBindings": {
+   "6379/tcp": [
+    {
+     "HostIp": "127.0.0.1",
+     "HostPort": "18099"
+    }
+   ]
+  },
+  "RestartPolicy": {
+   "Name": "unless-stopped",
+   "MaximumRetryCount": 0
+  },
+  "AutoRemove": false,
+  "VolumeDriver": "",
+  "VolumesFrom": null,
+  "ConsoleSize": [
+   0,
+   0
+  ],
+  "CapAdd": null,
+  "CapDrop": null,
+  "CgroupnsMode": "private",
+  "Dns": null,
+  "DnsOptions": [],
+  "DnsSearch": [],
+  "ExtraHosts": null,
+  "GroupAdd": null,
+  "IpcMode": "private",
+  "Cgroup": "",
+  "Links": null,
+  "OomScoreAdj": 0,
+  "PidMode": "",
+  "Privileged": false,
+  "PublishAllPorts": false,
+  "ReadonlyRootfs": false,
+  "SecurityOpt": null,
+  "UTSMode": "",
+  "UsernsMode": "",
+  "ShmSize": 67108864,
+  "Runtime": "runc",
+  "Isolation": "",
+  "CpuShares": 0,
+  "Memory": 0,
+  "NanoCpus": 0,
+  "CgroupParent": "",
+  "BlkioWeight": 0,
+  "BlkioWeightDevice": [],
+  "BlkioDeviceReadBps": [],
+  "BlkioDeviceWriteBps": [],
+  "BlkioDeviceReadIOps": [],
+  "BlkioDeviceWriteIOps": [],
+  "CpuPeriod": 0,
+  "CpuQuota": 0,
+  "CpuRealtimePeriod": 0,
+  "CpuRealtimeRuntime": 0,
+  "CpusetCpus": "",
+  "CpusetMems": "",
+  "Devices": [],
+  "DeviceCgroupRules": null,
+  "DeviceRequests": null,
+  "MemoryReservation": 0,
+  "MemorySwap": 0,
+  "MemorySwappiness": null,
+  "OomKillDisable": null,
+  "PidsLimit": null,
+  "Ulimits": null,
+  "CpuCount": 0,
+  "CpuPercent": 0,
+  "IOMaximumIOps": 0,
+  "IOMaximumBandwidth": 0,
+  "MaskedPaths": [
+   "/proc/acpi",
+   "/proc/asound",
+   "/proc/interrupts",
+   "/proc/kcore",
+   "/proc/keys",
+   "/proc/latency_stats",
+   "/proc/sched_debug",
+   "/proc/scsi",
+   "/proc/timer_list",
+   "/proc/timer_stats",
+   "/sys/devices/virtual/powercap",
+   "/sys/firmware",
+   "/sys/devices/system/cpu/cpu0/thermal_throttle",
+   "/sys/devices/system/cpu/cpu1/thermal_throttle",
+   "/sys/devices/system/cpu/cpu2/thermal_throttle",
+   "/sys/devices/system/cpu/cpu3/thermal_throttle",
+   "/sys/devices/system/cpu/cpu4/thermal_throttle",
+   "/sys/devices/system/cpu/cpu5/thermal_throttle",
+   "/sys/devices/system/cpu/cpu6/thermal_throttle",
+   "/sys/devices/system/cpu/cpu7/thermal_throttle",
+   "/sys/devices/system/cpu/cpu8/thermal_throttle",
+   "/sys/devices/system/cpu/cpu9/thermal_throttle",
+   "/sys/devices/system/cpu/cpu10/thermal_throttle",
+   "/sys/devices/system/cpu/cpu11/thermal_throttle",
+   "/sys/devices/system/cpu/cpu12/thermal_throttle",
+   "/sys/devices/system/cpu/cpu13/thermal_throttle",
+   "/sys/devices/system/cpu/cpu14/thermal_throttle",
+   "/sys/devices/system/cpu/cpu15/thermal_throttle",
+   "/sys/devices/system/cpu/cpu16/thermal_throttle",
+   "/sys/devices/system/cpu/cpu17/thermal_throttle",
+   "/sys/devices/system/cpu/cpu18/thermal_throttle",
+   "/sys/devices/system/cpu/cpu19/thermal_throttle",
+   "/sys/devices/system/cpu/cpu20/thermal_throttle",
+   "/sys/devices/system/cpu/cpu21/thermal_throttle",
+   "/sys/devices/system/cpu/cpu22/thermal_throttle",
+   "/sys/devices/system/cpu/cpu23/thermal_throttle",
+   "/sys/devices/system/cpu/cpu24/thermal_throttle",
+   "/sys/devices/system/cpu/cpu25/thermal_throttle",
+   "/sys/devices/system/cpu/cpu26/thermal_throttle",
+   "/sys/devices/system/cpu/cpu27/thermal_throttle",
+   "/sys/devices/system/cpu/cpu28/thermal_throttle",
+   "/sys/devices/system/cpu/cpu29/thermal_throttle",
+   "/sys/devices/system/cpu/cpu30/thermal_throttle",
+   "/sys/devices/system/cpu/cpu31/thermal_throttle"
+  ],
+  "ReadonlyPaths": [
+   "/proc/bus",
+   "/proc/fs",
+   "/proc/irq",
+   "/proc/sys",
+   "/proc/sysrq-trigger"
+  ]
+ },
+ "Storage": {
+  "RootFS": {
+   "Snapshot": {
+    "Name": "overlayfs"
+   }
+  }
+ },
+ "Mounts": [
+  {
+   "Type": "volume",
+   "Name": "upd-fixture-data",
+   "Source": "/var/lib/docker/volumes/upd-fixture-data/_data",
+   "Destination": "/data",
+   "Driver": "local",
+   "Mode": "z",
+   "RW": true,
+   "Propagation": ""
+  }
+ ],
+ "Config": {
+  "Hostname": "19832ea5a527",
+  "Domainname": "",
+  "User": "",
+  "AttachStdin": false,
+  "AttachStdout": false,
+  "AttachStderr": false,
+  "ExposedPorts": {
+   "6379/tcp": {}
+  },
+  "Tty": false,
+  "OpenStdin": false,
+  "StdinOnce": false,
+  "Env": [
+   "HALOID_SITE_BASE_URL=https://img.example.com",
+   "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+   "REDIS_VERSION=7.4.11"
+  ],
+  "Cmd": [
+   "redis-server"
+  ],
+  "Image": "redis:7",
+  "Volumes": {
+   "/data": {}
+  },
+  "WorkingDir": "/data",
+  "Entrypoint": [
+   "docker-entrypoint.sh"
+  ],
+  "Labels": {
+   "com.docker.compose.service": "haloid",
+   "so.plb.haloid.updates": "server"
+  }
+ },
+ "NetworkSettings": {
+  "SandboxID": "9bce0788d2c06c9b48b9f805b8346a904e94a3173c18a33843746d94e5edb55b",
+  "SandboxKey": "/var/run/docker/netns/9bce0788d2c0",
+  "Ports": {
+   "6379/tcp": [
+    {
+     "HostIp": "127.0.0.1",
+     "HostPort": "18099"
+    }
+   ]
+  },
+  "Networks": {
+   "bridge": {
+    "IPAMConfig": {},
+    "Links": null,
+    "Aliases": [],
+    "DriverOpts": {},
+    "GwPriority": 0,
+    "NetworkID": "723af187ba79ad963a69cb5fea4dcab798a3935d8abe5e7308ed69dcdf7610eb",
+    "EndpointID": "d9a00f48b53031a8b24dba168028402c9eb6eb308af8f04442c853c3b605d270",
+    "Gateway": "172.17.0.1",
+    "IPAddress": "172.17.0.5",
+    "MacAddress": "ee:ec:26:1b:b4:42",
+    "IPPrefixLen": 16,
+    "IPv6Gateway": "",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "DNSNames": null
+   },
+   "upd-fixture-net": {
+    "IPAMConfig": null,
+    "Links": null,
+    "Aliases": [
+     "haloid"
+    ],
+    "DriverOpts": null,
+    "GwPriority": 0,
+    "NetworkID": "7d3c5aa688bb95273701e05960e34091f954e9fcc9718a8673b4e1e969f269a8",
+    "EndpointID": "79bfce5c49cec092a0183ed3d9087fb5496690d0e871cd8df48181f21128525b",
+    "Gateway": "172.30.0.1",
+    "IPAddress": "172.30.0.2",
+    "MacAddress": "06:e5:d0:d3:80:c8",
+    "IPPrefixLen": 16,
+    "IPv6Gateway": "",
+    "GlobalIPv6Address": "",
+    "GlobalIPv6PrefixLen": 0,
+    "DNSNames": [
+     "upd-fixture",
+     "haloid",
+     "19832ea5a527"
+    ]
+   }
+  }
+ },
+ "ImageManifestDescriptor": {
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "digest": "sha256:026c880268ce52fb3a63b66150af583108a38c13af7633e325ae82a145f53a87",
+  "size": 2288,
+  "annotations": {
+   "com.docker.official-images.bashbrew.arch": "amd64",
+   "org.opencontainers.image.base.digest": "sha256:ec31d744f83f4a73447ba045aaab9409997efe5cc706eca4890c1be36cc1606a",
+   "org.opencontainers.image.base.name": "debian:bookworm-slim",
+   "org.opencontainers.image.created": "2026-10-21T00:38:56Z",
+   "org.opencontainers.image.revision": "74654c612ee06275377d483dc4e134e57b463e9e",
+   "org.opencontainers.image.source": "https://github.com/redis/docker-library-redis.git#74654c612ee06275377d483dc4e134e57b463e9e:debian",
+   "org.opencontainers.image.url": "https://hub.docker.com/_/redis",
+   "org.opencontainers.image.version": "7.4.11"
+  },
+  "platform": {
+   "architecture": "amd64",
+   "os": "linux"
+  }
+ }
+}

@@ -1,0 +1,5080 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Haloid API",
+    "description": "Haloid's own REST API. Errors are RFC 9457 problem details; dates are RFC 3339; lists are cursor-paginated.",
+    "contact": {
+      "name": "sopleb",
+      "email": "sopleb@pm.me"
+    },
+    "license": {
+      "name": "PolyForm-Noncommercial-1.0.0",
+      "identifier": "PolyForm-Noncommercial-1.0.0"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v2/admin/audit": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/admin/audit`: newest first.",
+        "operationId": "audit_log",
+        "parameters": [
+          {
+            "name": "before",
+            "in": "path",
+            "description": "Entries older than this id.",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntryView"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/admin/files/deleted": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/admin/files/deleted`: deleted files, retained until purged.",
+        "operationId": "deleted_files",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_FileView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/admin/files/{id}/purge": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/admin/files/{id}/purge`: destroy row and bytes, by a job\nthat retries if storage fails partway.",
+        "operationId": "purge_file",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Queued for destruction"
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/admin/files/{id}/restore": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/admin/files/{id}/restore`.",
+        "operationId": "restore_file",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Restored"
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/admin/users": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/admin/users`. Administrators.",
+        "operationId": "users",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "path",
+            "description": "Part of a username or email.",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_AdminUserView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/admin/users/{id}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`PATCH /api/v2/admin/users/{id}`: role and status. A ban signs the user\nout everywhere. No one can demote or ban themselves.",
+        "operationId": "update_user",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A bad role or status, or a change to yourself",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/albums": {
+      "post": {
+        "tags": [
+          "albums"
+        ],
+        "summary": "`POST /api/v2/albums`: a new album, owned by the caller.",
+        "operationId": "create_album",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewAlbumBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Guests have no albums",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad fields, a bad parent, or nested too deep",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/albums/{id}": {
+      "get": {
+        "tags": [
+          "library"
+        ],
+        "summary": "`GET /api/v2/albums/{id}`.",
+        "operationId": "album",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "albums"
+        ],
+        "summary": "`DELETE /api/v2/albums/{id}?contents=keep|delete`.",
+        "operationId": "delete_album",
+        "parameters": [
+          {
+            "name": "contents",
+            "in": "path",
+            "description": "`keep` leaves the files, out of any album, and moves sub-albums up;\n`delete` deletes the files and sub-albums too. Required: there is no\nsafe guess.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "No such album, or not this caller's to delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`contents` missing or not keep/delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "albums"
+        ],
+        "summary": "`PATCH /api/v2/albums/{id}`.",
+        "operationId": "edit_album",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlbumPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The album as it now is",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlbumView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such album, or not this caller's to change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad fields, or a move into itself or too deep",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/albums/{id}/files": {
+      "get": {
+        "tags": [
+          "library"
+        ],
+        "summary": "`GET /api/v2/albums/{id}/files`, in the owner's order by default.",
+        "operationId": "album_files",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_FileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/albums/{id}/order": {
+      "put": {
+        "tags": [
+          "albums"
+        ],
+        "summary": "`PUT /api/v2/albums/{id}/order`.",
+        "operationId": "reorder_album",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Rearranged"
+          },
+          "404": {
+            "description": "No such album, or not this caller's to change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/albums/{id}/unlock": {
+      "post": {
+        "tags": [
+          "albums"
+        ],
+        "summary": "`POST /api/v2/albums/{id}/unlock`: prove a password album's password;\nthe answer sets a cookie that unlocks it for a day. From our own page\nonly, like signing in.",
+        "operationId": "unlock_album",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnlockBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Unlocked; the grant cookie is set"
+          },
+          "401": {
+            "description": "Wrong password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such password album",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many tries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/api-keys": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`GET /api/v2/auth/api-keys`: the caller's keys, revoked ones included.",
+        "operationId": "api_keys",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`POST /api/v2/auth/api-keys`.",
+        "operationId": "create_api_key",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewApiKeyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the secret is in this response only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApiKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad label, or too many keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/api-keys/{id}": {
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`DELETE /api/v2/auth/api-keys/{id}`: revoke one of the caller's keys.",
+        "operationId": "revoke_api_key",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revoked"
+          },
+          "404": {
+            "description": "Not one of the caller's keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/challenge": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`GET /api/v2/auth/challenge`: a proof-of-work challenge for the widget.\nRate limited per address: making one costs the server a key derivation.",
+        "operationId": "challenge",
+        "responses": {
+          "200": {
+            "description": "A signed ALTCHA v2 challenge for the widget",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "429": {
+            "description": "Too many challenges from this address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in; the session cookie is set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong login or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Failed proof-of-work, banned, or not our page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited or account locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`POST /api/v2/auth/logout`: end this session, and clear the cookie\nwhether or not there was one.",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Signed out; the session cookie is cleared"
+          }
+        }
+      }
+    },
+    "/api/v2/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`GET /api/v2/auth/me`: the signed-in user, or 401.",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "The signed-in user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`PATCH /api/v2/auth/me`.",
+        "operationId": "update_me",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The account as it now is",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "That email belongs to another account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/password": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`POST /api/v2/auth/password`: change it, and sign every other session\nout. A browser session only — an API key cannot change a password.",
+        "operationId": "change_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Changed; other sessions signed out"
+          },
+          "401": {
+            "description": "Not signed in in a browser, or the current password is wrong",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The new password is too weak",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The new account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Registration closed, failed proof-of-work, or not our page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username or email taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid username, email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many registrations from this address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/sessions": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`GET /api/v2/auth/sessions`: where the caller is signed in.",
+        "operationId": "sessions",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LoginSessionView"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "summary": "`DELETE /api/v2/auth/sessions/{id}`: sign one session out.",
+        "operationId": "revoke_session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Signed out"
+          },
+          "404": {
+            "description": "Not one of the caller's sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "`GET /api/v2/config`: what this caller may do, before a byte leaves.",
+        "operationId": "config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/files": {
+      "get": {
+        "tags": [
+          "library"
+        ],
+        "summary": "`GET /api/v2/files`: the public gallery.",
+        "operationId": "explore",
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_FileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/files/bulk": {
+      "post": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`POST /api/v2/files/bulk`: one action over many files. Each file\nsucceeds or fails on its own; the response says which.",
+        "operationId": "bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "What happened to each file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No ids, too many, or a bad body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/files/{id}": {
+      "get": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`GET /api/v2/files/{id}`: the file if the caller may see it, else 404.",
+        "operationId": "file",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The file's public id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`DELETE /api/v2/files/{id}`: as the owner, a moderator or an admin, or —\nfor anyone — with the upload's delete token in `X-Delete-Token`. The file\nis retained for audit and its bytes quarantined; only an administrator\ncan restore or purge it.",
+        "operationId": "delete_file",
+        "parameters": [
+          {
+            "name": "X-Delete-Token",
+            "in": "header",
+            "description": "The token from the upload's delete link",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "No such file, or not this caller's to delete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`PATCH /api/v2/files/{id}`.",
+        "operationId": "edit_file",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The file as it now is",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such file, or not this caller's to change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad fields, or a stop word",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/files/{id}/view": {
+      "post": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`POST /api/v2/files/{id}/view`: count a view of the file's page. The\nweb app sends it once per visit; plain reads of the file are not views.",
+        "operationId": "view",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The file's public id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Counted, or already counted for this viewer lately"
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/licence": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/licence`: the instance id and the licence. Administrators.",
+        "operationId": "licence",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LicenceView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`PUT /api/v2/licence`: install a key. It must be signed by Haloid and\nissued for this instance; it applies at once.",
+        "operationId": "install_licence",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenceBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LicenceView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a valid key for this instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`DELETE /api/v2/licence`: remove the installed key.",
+        "operationId": "remove_licence",
+        "responses": {
+          "204": {
+            "description": "Removed; the instance runs as Community"
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/metrics": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/metrics`: Prometheus text format. For an administrator, or\nfor a scraper holding `HALOID_METRICS_TOKEN` as its bearer token.",
+        "operationId": "metrics",
+        "responses": {
+          "200": {
+            "description": "Metrics",
+            "content": {
+              "text/plain": {}
+            }
+          },
+          "401": {
+            "description": "No admin key and no metrics token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/moderation/queue": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/moderation/queue`: files held for review, oldest first.\nModerators and administrators.",
+        "operationId": "moderation_queue",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_QueuedFileView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a moderator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/moderation/{id}/approve": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/moderation/{id}/approve`: publish a held file.",
+        "operationId": "approve",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Approved and published"
+          },
+          "403": {
+            "description": "Not a moderator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/moderation/{id}/deny": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/moderation/{id}/deny`: refuse a held file, which deletes\nit with reason `moderation`.",
+        "operationId": "deny",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Denied and deleted"
+          },
+          "403": {
+            "description": "Not a moderator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/settings": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/settings`: every setting, its value, default and whether\nthe environment pins it. Administrators.",
+        "operationId": "settings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SettingView"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`PATCH /api/v2/settings`, a map of key to new value. All or nothing: an\nunknown key, a bad value or a pinned key refuses the whole write. Live\nbefore the response.",
+        "operationId": "update_settings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Every setting, as it now is",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SettingView"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Refused; `errors` says which keys and why",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/settings/watermark": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/settings/watermark`: the current watermark image.",
+        "operationId": "watermark",
+        "responses": {
+          "200": {
+            "description": "The image",
+            "content": {
+              "image/*": {}
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No watermark is set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`PUT /api/v2/settings/watermark`, the image as the body: set the mark\nthat `watermark.enabled` stamps. A still image, at most 5 MiB.",
+        "operationId": "set_watermark",
+        "requestBody": {
+          "content": {
+            "image/png": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Set"
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Over 5 MiB",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not a still image",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`DELETE /api/v2/settings/watermark`.",
+        "operationId": "remove_watermark",
+        "responses": {
+          "204": {
+            "description": "Removed; nothing is stamped until another is set"
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/storages": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/storages`. Administrators.",
+        "operationId": "storages",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StorageView"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/storages`: add a storage. Checked first, and in use as\nsoon as it is saved.",
+        "operationId": "create_storage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The name is taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A configuration that cannot work",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/storages/{id}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`PATCH /api/v2/storages/{id}`: replace a storage's settings. Takes\neffect as soon as it is saved.",
+        "operationId": "update_storage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such storage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A configuration that cannot work",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/storages/{id}/retire": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/storages/{id}/retire`: no new uploads; it keeps serving.",
+        "operationId": "retire_storage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Retired"
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such storage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/storages/{id}/test": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/storages/{id}/test`: write, read, serve, quarantine,\nrelease and delete a probe object, reporting each step. Administrators\nonly.",
+        "operationId": "test_storage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The storage's numeric id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The checks, passed or not",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageTestView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such storage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/updates": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`GET /api/v2/updates`: this build, the release on offer, and whether it\ncan be installed. Administrators.",
+        "operationId": "updates",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/updates/check": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/updates/check`: look for a release now. A failed look is\nreported in `error`, not as an error response.",
+        "operationId": "check_updates",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/updates/install": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "`POST /api/v2/updates/install`: install the release on offer. Answers\nonce it has started; the server then restarts into it. Back up the\ndatabase first: migrations run on start and are not undone by a\nrollback.",
+        "operationId": "install_update",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallingView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "An update is already under way",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Nothing on offer, or this install cannot update itself",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/uploads": {
+      "post": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`POST /api/v2/uploads`, multipart: a `file` (or a `url` to fetch it\nfrom, where the instance allows that), and optionally `title`,\n`description`, `tags` (comma-separated or repeated), `album`, `nsfw`,\n`expires_in` (seconds) and `width`.",
+        "operationId": "upload",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The same bytes were uploaded before; that file is returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A bearer key that is wrong or revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Uploads are off for this caller, or a cookie request not from our page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Over this caller's size or pixel limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Not an accepted type, unreadable, or bad fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/uploads/sessions": {
+      "post": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`POST /api/v2/uploads/sessions`.",
+        "operationId": "open",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenSessionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Opened",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Uploads are off for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Over this caller's size limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad fields, or an album that is not the caller's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/uploads/sessions/{id}": {
+      "get": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`GET /api/v2/uploads/sessions/{id}`: what has arrived. Ask before\nresuming.",
+        "operationId": "state",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such session for this caller, or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`DELETE /api/v2/uploads/sessions/{id}`: give up, dropping the chunks.",
+        "operationId": "abandon",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Abandoned"
+          },
+          "404": {
+            "description": "No such session for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/uploads/sessions/{id}/chunks/{n}": {
+      "put": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`PUT /api/v2/uploads/sessions/{id}/chunks/{n}`, the chunk's bytes as the\nbody. Chunks count from 0; sending one again replaces it.",
+        "operationId": "put_chunk",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Received; what the session now holds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such session for this caller, or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The session is already complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No such chunk, or the wrong length",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/uploads/sessions/{id}/complete": {
+      "post": {
+        "tags": [
+          "files"
+        ],
+        "summary": "`POST /api/v2/uploads/sessions/{id}/complete`: assemble and upload,\nanswering as `POST /api/v2/uploads` does.",
+        "operationId": "complete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The same bytes were uploaded before; that file is returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such session for this caller, or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already being completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Chunks missing, or the file was refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/users/{username}": {
+      "get": {
+        "tags": [
+          "library"
+        ],
+        "summary": "`GET /api/v2/users/{username}`.",
+        "operationId": "user",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/users/{username}/albums": {
+      "get": {
+        "tags": [
+          "library"
+        ],
+        "summary": "`GET /api/v2/users/{username}/albums`: top-level albums.",
+        "operationId": "user_albums",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_AlbumView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/users/{username}/files": {
+      "get": {
+        "tags": [
+          "library"
+        ],
+        "summary": "`GET /api/v2/users/{username}/files`.",
+        "operationId": "user_files",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageView_FileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not there, or not for this caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bad parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdminUserView": {
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "role",
+          "status",
+          "is_private",
+          "file_count",
+          "disk_used",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "disk_used": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string"
+          },
+          "is_private": {
+            "type": "boolean"
+          },
+          "last_login_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "role": {
+            "type": "string",
+            "description": "`user`, `manager` or `admin`."
+          },
+          "status": {
+            "type": "string",
+            "description": "`valid`, `awaiting_confirmation` or `banned`."
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "AlbumPatch": {
+        "type": "object",
+        "description": "Fields to change on an album. Leave a field out to keep it; send `null`\nto clear a description or move the album to the top level.",
+        "properties": {
+          "cover": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The file to show on the album's card, one of its own; `null` goes\nback to its first picture."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A new parent album, or `null` for the top level."
+          },
+          "password": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Needed to make an album a password album; replaces the password of\none that already is."
+          },
+          "privacy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AlbumView": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "privacy",
+          "file_count",
+          "created_at",
+          "can_edit"
+        ],
+        "properties": {
+          "can_edit": {
+            "type": "boolean",
+            "description": "Whether this caller may edit, rearrange and delete the album."
+          },
+          "cover": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A small picture for the album's card: its chosen cover, else its\nfirst picture or video. `null` for an album with nothing to show."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "privacy": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiKeyView": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "prefix",
+          "active",
+          "created_at"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "label": {
+            "type": "string"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "The start of the key, all that is ever shown again."
+          },
+          "revoked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AuditEntryView": {
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "detail",
+          "created_at"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "detail": {
+            "type": "object"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "AvailableView": {
+        "type": "object",
+        "required": [
+          "version",
+          "published_at"
+        ],
+        "properties": {
+          "notes_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "BulkBody": {
+        "type": "object",
+        "required": [
+          "action",
+          "ids"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/BulkVerb"
+          },
+          "album": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "For `move`: the album, or `null` for none."
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "File ids, at most 100."
+          }
+        },
+        "additionalProperties": false
+      },
+      "BulkFailure": {
+        "type": "object",
+        "required": [
+          "id",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The problem code it would have had alone: `not_found`, …"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "BulkResult": {
+        "type": "object",
+        "required": [
+          "done",
+          "failed"
+        ],
+        "properties": {
+          "done": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkFailure"
+            }
+          }
+        }
+      },
+      "BulkVerb": {
+        "type": "string",
+        "enum": [
+          "move",
+          "delete"
+        ]
+      },
+      "ConfigView": {
+        "type": "object",
+        "description": "What the frontend needs before a byte leaves: whether this caller may\nupload, how much, and what.",
+        "required": [
+          "site_name",
+          "base_url",
+          "registration_open",
+          "signed_in",
+          "theme",
+          "branding",
+          "uploads"
+        ],
+        "properties": {
+          "base_url": {
+            "type": "string"
+          },
+          "branding": {
+            "type": "boolean",
+            "description": "Whether \"Powered by Haloid\" is shown: true unless a licence removes\nit."
+          },
+          "registration_open": {
+            "type": "boolean"
+          },
+          "signed_in": {
+            "type": "boolean"
+          },
+          "site_name": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string",
+            "description": "The site's default theme, for a visitor who has not picked one."
+          },
+          "uploads": {
+            "$ref": "#/components/schemas/UploadConfig"
+          }
+        }
+      },
+      "CreatedApiKey": {
+        "type": "object",
+        "required": [
+          "key",
+          "secret"
+        ],
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ApiKeyView"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The whole key. Shown this once; only its hash is kept."
+          }
+        }
+      },
+      "DenyBody": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why, for the audit log."
+          }
+        },
+        "additionalProperties": false
+      },
+      "FilePatch": {
+        "type": "object",
+        "description": "Fields to change on a file. Leave a field out to keep it; send `null`\nto clear a title, description or album.",
+        "properties": {
+          "album": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "An album id of the file owner's, or `null` for none."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nsfw": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tags": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "The complete new tag list."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileUrls": {
+        "type": "object",
+        "required": [
+          "viewer"
+        ],
+        "properties": {
+          "delete": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The one-shot delete link. Only in the response to the upload that\ncreated the file."
+          },
+          "frame": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "image": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "medium": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "thumb": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "viewer": {
+            "type": "string"
+          }
+        }
+      },
+      "FileView": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "mime",
+          "extension",
+          "width",
+          "height",
+          "size",
+          "is_animated",
+          "nsfw",
+          "approved",
+          "chain",
+          "tags",
+          "created_at",
+          "views",
+          "urls",
+          "can_edit"
+        ],
+        "properties": {
+          "album": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "can_edit": {
+            "type": "boolean",
+            "description": "Whether this caller may edit and delete the file: its owner, a\nmoderator or an administrator."
+          },
+          "chain": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Which derivatives exist: `[\"image\", \"medium\", \"thumb\"]`."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string"
+          },
+          "is_animated": {
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "nsfw": {
+            "type": "boolean"
+          },
+          "owner": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The owner's username, on a single file; `null` for a guest's upload\nand in lists."
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "urls": {
+            "$ref": "#/components/schemas/FileUrls"
+          },
+          "views": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Views of its page, one per viewer per half hour; the owner's own\nviews are not counted.",
+            "minimum": 0
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Display dimensions, after rotation. Zero for audio.",
+            "minimum": 0
+          }
+        }
+      },
+      "InstallingView": {
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "The version being installed."
+          }
+        }
+      },
+      "Kind": {
+        "type": "string",
+        "description": "What sort of file it is.",
+        "enum": [
+          "image",
+          "video",
+          "audio"
+        ]
+      },
+      "LicenceBody": {
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key, as issued: `HALOID1.…`."
+          }
+        }
+      },
+      "LicenceDetailView": {
+        "type": "object",
+        "required": [
+          "id",
+          "licensee",
+          "kind",
+          "issued_at"
+        ],
+        "properties": {
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "kind": {
+            "type": "string",
+            "description": "`trial`, `standard` or `perpetual`."
+          },
+          "licensee": {
+            "type": "string"
+          }
+        }
+      },
+      "LicenceView": {
+        "type": "object",
+        "required": [
+          "instance_id",
+          "state",
+          "pro",
+          "branding",
+          "from_environment",
+          "storage_kinds",
+          "unavailable_storages"
+        ],
+        "properties": {
+          "branding": {
+            "type": "boolean"
+          },
+          "from_environment": {
+            "type": "boolean",
+            "description": "Set by `HALOID_LICENCE_KEY`, so not changeable here."
+          },
+          "instance_id": {
+            "type": "string",
+            "description": "This instance's id: what a key is issued for."
+          },
+          "licence": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LicenceDetailView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pro": {
+            "type": "boolean",
+            "description": "Whether Pro features may be put to new use."
+          },
+          "state": {
+            "type": "string",
+            "description": "`none`, `active` or `lapsed`."
+          },
+          "storage_kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The kinds of storage this build can use: `local`, and `s3` in Pro."
+          },
+          "unavailable_storages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Storages this build cannot load, by name: they need the Pro build."
+          }
+        }
+      },
+      "LoginBody": {
+        "type": "object",
+        "required": [
+          "login",
+          "password",
+          "altcha"
+        ],
+        "properties": {
+          "altcha": {
+            "type": "string"
+          },
+          "login": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginSessionView": {
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "last_seen_at",
+          "expires_at",
+          "current"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "current": {
+            "type": "boolean",
+            "description": "The session making this request."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string"
+          },
+          "ip": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "MeView": {
+        "type": "object",
+        "description": "The signed-in user, as they see themselves.",
+        "required": [
+          "id",
+          "username",
+          "role",
+          "is_private",
+          "file_count",
+          "album_count",
+          "disk_used",
+          "created_at"
+        ],
+        "properties": {
+          "album_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "disk_used": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "id": {
+            "type": "string"
+          },
+          "is_private": {
+            "type": "boolean",
+            "description": "Whether the profile is hidden from everyone else."
+          },
+          "role": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "NewAlbumBody": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A parent album's id, for a nested album."
+          },
+          "password": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Required for a password album."
+          },
+          "privacy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`public` (the default), `unlisted`, `private` or `password`."
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewApiKeyBody": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpenSessionBody": {
+        "type": "object",
+        "required": [
+          "filename",
+          "size"
+        ],
+        "properties": {
+          "album": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expires_in": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Seconds until the file expires; absent or 0 for never.",
+            "minimum": 0
+          },
+          "filename": {
+            "type": "string"
+          },
+          "nsfw": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The whole file's size in bytes, held to this caller's limit now.",
+            "minimum": 0
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "OrderBody": {
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "File ids in their new order. Files left out follow, in their current\norder; ids not in the album are ignored."
+          }
+        },
+        "additionalProperties": false
+      },
+      "PageView_AdminUserView": {
+        "type": "object",
+        "description": "One page of a list. `next` is the cursor for the page after, `null` on\nthe last.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "username",
+                "role",
+                "status",
+                "is_private",
+                "file_count",
+                "disk_used",
+                "created_at"
+              ],
+              "properties": {
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "disk_used": {
+                  "type": "integer",
+                  "format": "int64",
+                  "minimum": 0
+                },
+                "display_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "email": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "file_count": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                },
+                "id": {
+                  "type": "string"
+                },
+                "is_private": {
+                  "type": "boolean"
+                },
+                "last_login_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "role": {
+                  "type": "string",
+                  "description": "`user`, `manager` or `admin`."
+                },
+                "status": {
+                  "type": "string",
+                  "description": "`valid`, `awaiting_confirmation` or `banned`."
+                },
+                "username": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PageView_AlbumView": {
+        "type": "object",
+        "description": "One page of a list. `next` is the cursor for the page after, `null` on\nthe last.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "privacy",
+                "file_count",
+                "created_at",
+                "can_edit"
+              ],
+              "properties": {
+                "can_edit": {
+                  "type": "boolean",
+                  "description": "Whether this caller may edit, rearrange and delete the album."
+                },
+                "cover": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "A small picture for the album's card: its chosen cover, else its\nfirst picture or video. `null` for an album with nothing to show."
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "file_count": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "privacy": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PageView_FileView": {
+        "type": "object",
+        "description": "One page of a list. `next` is the cursor for the page after, `null` on\nthe last.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "kind",
+                "mime",
+                "extension",
+                "width",
+                "height",
+                "size",
+                "is_animated",
+                "nsfw",
+                "approved",
+                "chain",
+                "tags",
+                "created_at",
+                "views",
+                "urls",
+                "can_edit"
+              ],
+              "properties": {
+                "album": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "approved": {
+                  "type": "boolean"
+                },
+                "can_edit": {
+                  "type": "boolean",
+                  "description": "Whether this caller may edit and delete the file: its owner, a\nmoderator or an administrator."
+                },
+                "chain": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Which derivatives exist: `[\"image\", \"medium\", \"thumb\"]`."
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "duration_ms": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int32",
+                  "minimum": 0
+                },
+                "expires_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "extension": {
+                  "type": "string"
+                },
+                "height": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0
+                },
+                "id": {
+                  "type": "string"
+                },
+                "is_animated": {
+                  "type": "boolean"
+                },
+                "kind": {
+                  "$ref": "#/components/schemas/Kind"
+                },
+                "mime": {
+                  "type": "string"
+                },
+                "nsfw": {
+                  "type": "boolean"
+                },
+                "owner": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The owner's username, on a single file; `null` for a guest's upload\nand in lists."
+                },
+                "size": {
+                  "type": "integer",
+                  "format": "int64",
+                  "minimum": 0
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "urls": {
+                  "$ref": "#/components/schemas/FileUrls"
+                },
+                "views": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Views of its page, one per viewer per half hour; the owner's own\nviews are not counted.",
+                  "minimum": 0
+                },
+                "width": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Display dimensions, after rotation. Zero for audio.",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PageView_QueuedFileView": {
+        "type": "object",
+        "description": "One page of a list. `next` is the cursor for the page after, `null` on\nthe last.",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "queued_at"
+              ],
+              "properties": {
+                "file": {
+                  "$ref": "#/components/schemas/FileView"
+                },
+                "queued_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PasswordBody": {
+        "type": "object",
+        "required": [
+          "current",
+          "new"
+        ],
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "new": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemBody": {
+        "type": "object",
+        "description": "The problem-details body, for the OpenAPI document. Every v2 error\nresponse is one of these with `Content-Type: application/problem+json`.",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable, for clients to branch on: `not_found`, `too_large`, …"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Per-field messages, when the request had invalid fields.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Always `about:blank`; `code` is the machine-readable part."
+          }
+        }
+      },
+      "ProfilePatch": {
+        "type": "object",
+        "description": "What a user may change about themselves. Leave a field out to keep it;\n`null` clears a display name or email.",
+        "properties": {
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_private": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "QueuedFileView": {
+        "type": "object",
+        "required": [
+          "file",
+          "queued_at"
+        ],
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/FileView"
+          },
+          "queued_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "RegisterBody": {
+        "type": "object",
+        "required": [
+          "username",
+          "password",
+          "altcha"
+        ],
+        "properties": {
+          "altcha": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "password": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "SessionView": {
+        "type": "object",
+        "required": [
+          "id",
+          "chunk_size",
+          "chunks_total",
+          "received",
+          "missing",
+          "status",
+          "expires_at"
+        ],
+        "properties": {
+          "chunk_size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Every chunk but the last is exactly this long.",
+            "minimum": 0
+          },
+          "chunks_total": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          "received": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            },
+            "description": "Chunk numbers the server holds. The only record that counts."
+          },
+          "status": {
+            "type": "string",
+            "description": "`open`, `assembling`, `done`, `failed` or `expired`."
+          }
+        }
+      },
+      "SettingView": {
+        "type": "object",
+        "required": [
+          "key",
+          "value",
+          "default",
+          "pinned"
+        ],
+        "properties": {
+          "default": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "Set in the environment, and read-only here."
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "StorageBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "config",
+          "url_prefix"
+        ],
+        "properties": {
+          "capacity_bytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "config": {
+            "type": "object"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string",
+            "description": "`local` or `s3`."
+          },
+          "name": {
+            "type": "string"
+          },
+          "path_mode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`datefolder` (the default), `direct` or `path`."
+          },
+          "path_template": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "url_prefix": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StorageCheckView": {
+        "type": "object",
+        "required": [
+          "name",
+          "ok",
+          "detail"
+        ],
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "What happened, in words an operator can act on."
+          },
+          "name": {
+            "type": "string",
+            "description": "`write`, `read`, `public_url`, `quarantine`, `quarantine_private`,\n`release` or `delete`."
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StorageTestView": {
+        "type": "object",
+        "required": [
+          "ok",
+          "checks"
+        ],
+        "properties": {
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageCheckView"
+            }
+          },
+          "ok": {
+            "type": "boolean",
+            "description": "Every check passed."
+          }
+        }
+      },
+      "StorageView": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "config",
+          "url_prefix",
+          "path_mode",
+          "used_bytes",
+          "file_count",
+          "is_active",
+          "priority"
+        ],
+        "properties": {
+          "capacity_bytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0
+          },
+          "config": {
+            "type": "object",
+            "description": "The kind's own settings: bucket, endpoint, paths. Never credentials."
+          },
+          "file_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string",
+            "description": "`local` or `s3`."
+          },
+          "name": {
+            "type": "string"
+          },
+          "path_mode": {
+            "type": "string",
+            "description": "`datefolder`, `direct` or `path`."
+          },
+          "path_template": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "retired_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "url_prefix": {
+            "type": "string"
+          },
+          "used_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "UnlockBody": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateView": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "current",
+          "edition",
+          "mode",
+          "hour",
+          "installable",
+          "phase"
+        ],
+        "properties": {
+          "available": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AvailableView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "current": {
+            "type": "string",
+            "description": "The running version."
+          },
+          "disabled_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "edition": {
+            "type": "string",
+            "description": "`community` or `pro`."
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "False when this build cannot update itself (in a container, the\nimage is upgraded instead); then nothing else here applies."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the last check failed."
+          },
+          "failure": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What went wrong, when `phase` is `failed`."
+          },
+          "hour": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The `updates.hour` setting: when `auto` installs, UTC.",
+            "minimum": 0
+          },
+          "installable": {
+            "type": "boolean",
+            "description": "Whether a release can be installed here."
+          },
+          "mode": {
+            "type": "string",
+            "description": "The `updates.mode` setting: `off`, `notify` or `auto`."
+          },
+          "not_installable": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "If not, why not."
+          },
+          "phase": {
+            "type": "string",
+            "description": "`idle`, `downloading`, `installing`, `restarting` or `failed`."
+          }
+        }
+      },
+      "UploadConfig": {
+        "type": "object",
+        "required": [
+          "allowed",
+          "guests_allowed",
+          "max_size",
+          "max_pixels",
+          "extensions",
+          "max_expiration_secs",
+          "url_sources"
+        ],
+        "properties": {
+          "allowed": {
+            "type": "boolean",
+            "description": "Whether this caller may upload at all."
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "guests_allowed": {
+            "type": "boolean"
+          },
+          "max_expiration_secs": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "max_pixels": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "max_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "This caller's limit, in bytes.",
+            "minimum": 0
+          },
+          "url_sources": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UploadForm": {
+        "type": "object",
+        "description": "The multipart upload form, for the document.",
+        "required": [
+          "file"
+        ],
+        "properties": {
+          "album": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "An album's public id."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expires_in": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Seconds until the file expires.",
+            "minimum": 0
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The file itself."
+          },
+          "nsfw": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tags": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Comma-separated, or the field repeated."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Instead of `file`: a URL to fetch it from, where the instance allows\nURL uploads (`uploads.url_sources` in `/api/v2/config`)."
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Shrink the served image to this width, keeping the original.",
+            "minimum": 0
+          }
+        }
+      },
+      "UploadResponse": {
+        "type": "object",
+        "required": [
+          "file",
+          "duplicate"
+        ],
+        "properties": {
+          "duplicate": {
+            "type": "boolean",
+            "description": "Whether an earlier upload of the same bytes was returned instead."
+          },
+          "file": {
+            "$ref": "#/components/schemas/FileView"
+          }
+        }
+      },
+      "UserPatch": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserView": {
+        "type": "object",
+        "description": "A user as anyone may see them.",
+        "required": [
+          "username",
+          "file_count",
+          "album_count",
+          "created_at"
+        ],
+        "properties": {
+          "album_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file_count": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "files",
+      "description": "Uploading and reading files"
+    },
+    {
+      "name": "library",
+      "description": "Lists: explore, profiles, albums"
+    },
+    {
+      "name": "albums",
+      "description": "Creating and arranging albums"
+    },
+    {
+      "name": "admin",
+      "description": "Administering the instance"
+    },
+    {
+      "name": "account",
+      "description": "Your own account: profile, password, keys, sessions"
+    },
+    {
+      "name": "auth",
+      "description": "Signing in, for the browser"
+    },
+    {
+      "name": "config",
+      "description": "What this caller may do"
+    }
+  ]
+}
